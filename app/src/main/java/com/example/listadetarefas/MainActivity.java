@@ -8,7 +8,9 @@ import android.content.Intent;
 import android.media.AudioDeviceCallback;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -28,6 +30,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,13 +49,27 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (!isTalkBackEnabled()) {
+            showTalkBackInstructions();
+        }
+
+        //conexao de audio
         audioHelper = new AudioHelper(this);
 
         AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 
         isSpeakerAvailable = audioHelper.audioOutputAvailable(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER);
 
-        isBluetoothHeadsetConnected = audioHelper.audioOutputAvailable(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP);
+        Toast.makeText(MainActivity.this, "Favor conectar Fone de ouvido Bluetooth!", Toast.LENGTH_SHORT).show();
+        if( !isSpeakerAvailable ){
+            isBluetoothHeadsetConnected = audioHelper.audioOutputAvailable(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP);
+            if( !isBluetoothHeadsetConnected ) {
+                openBluetoothSettings();
+            }
+        }
+
+        Log.d("isSpeakerAvailable",  Boolean.toString(isSpeakerAvailable ));
+        Log.d("isBluetoothHeadsetConnected",  Boolean.toString(isBluetoothHeadsetConnected ));
         audioManager.registerAudioDeviceCallback(new AudioDeviceCallback() {
             @Override
             public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
@@ -77,14 +94,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }, null);
 
-        Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intent.putExtra("EXTRA_CONNECTION_ONLY", true);
-        intent.putExtra("EXTRA_CLOSE_ON_CONNECT", true);
-        intent.putExtra("android.bluetooth.devicepicker.extra.FILTER_TYPE", 1);
-        startActivity(intent);
 
-
+        //Lista
         tasksAdapter = new ArrayAdapter<>(  this,android.R.layout.simple_list_item_1);
         ListView tasksListView = findViewById(R.id.taskListView);
         tasksListView.setAdapter(tasksAdapter);
@@ -132,5 +143,42 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void openBluetoothSettings() {
+        Log.d("MainActivity", "testeeee");
+        Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("EXTRA_CONNECTION_ONLY", true);
+        intent.putExtra("EXTRA_CLOSE_ON_CONNECT", true);
+        intent.putExtra("android.bluetooth.devicepicker.extra.FILTER_TYPE", 1);
+        startActivity(intent);
+    }
 
+
+    private boolean isTalkBackEnabled() {
+        int accessibilityEnabled = 0;
+        try {
+            accessibilityEnabled = Settings.Secure.getInt(
+                    getContentResolver(),
+                    Settings.Secure.ACCESSIBILITY_ENABLED);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return accessibilityEnabled == 1;
+    }
+
+    private void showTalkBackInstructions() {
+        new AlertDialog.Builder(this)
+                .setTitle("Ativar TalkBack")
+                .setMessage("Para usar este aplicativo com TalkBack, vá para Configurações -> Acessibilidade -> TalkBack e ative-o.")
+                .setPositiveButton("Ir para Configurações", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
 }

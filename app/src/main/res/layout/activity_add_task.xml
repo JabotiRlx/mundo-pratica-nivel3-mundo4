@@ -20,7 +20,9 @@
             android:layout_height="wrap_content"
             android:hint="Digite a tarefa aqui"
             android:inputType="text"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:contentDescription="Campo de texto para digitar a tarefa"
+            />
 
         <Button
             android:id="@+id/confirmButton"
@@ -28,7 +30,9 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/taskEditText"
             android:layout_centerHorizontal="true"
-            android:text= "OK" />
+            android:text= "OK"
+            android:contentDescription="Botão para confirmar a tarefa"
+            />
 
     </RelativeLayout>
 

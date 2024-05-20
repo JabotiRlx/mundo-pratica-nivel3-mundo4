@@ -16,14 +16,18 @@
             android:layout_height="50dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:text="+" />
+            android:text="+"
+            android:contentDescription="Adicionar Tarefa" />
+            />
 
         <ListView
             android:id="@+id/taskListView"
             android:layout_width="match_parent"
             android:layout_height="116dp"
             android:layout_above="@+id/addTaskButton"
-            android:layout_marginBottom="-2dp" />
+            android:layout_marginBottom="-2dp"
+            android:contentDescription="Lista de Tarefas"
+            />
 
     </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
