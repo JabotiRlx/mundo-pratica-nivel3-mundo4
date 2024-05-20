@@ -2,6 +2,7 @@ package com.example.listadetarefas;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,18 +19,22 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.media.AudioDeviceInfo;
 import android.widget.Toast;
+import android.speech.RecognizerIntent;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,13 +42,15 @@ public class MainActivity extends AppCompatActivity {
     private ListView tasksListView;
     private ArrayList<String> taskList;
     private Button addTaskButton;
+
+    private Button voiceButton;
     private ArrayAdapter<String> tasksAdapter;
 
     private AudioHelper audioHelper;
 
     private boolean isSpeakerAvailable;
     private boolean isBluetoothHeadsetConnected;
-
+    private static final int REQUEST_CODE_SPEECH_INPUT = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -122,6 +129,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        voiceButton = findViewById(R.id.voiceButton);
+        voiceButton.setOnClickListener(v -> startVoiceRecognition());
+//
+//      if (!audioHelper.isMicrophoneActive()) {
+////            startVoiceRecognition();
+////        } else {
+//            Toast.makeText(this, "Microfone não está ativo ou está em uso", Toast.LENGTH_SHORT).show();
+//      }
         tasksListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -180,5 +195,31 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
+    }
+    private void startVoiceRecognition() {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Diga a tarefa a ser adicionada");
+
+        try {
+            startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(MainActivity.this, "Falha na captura da voz. Tente novamente!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+
+        if (requestCode == REQUEST_CODE_SPEECH_INPUT && resultCode == RESULT_OK && data != null) {
+            List<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            if (results != null && !results.isEmpty()) {
+                String task = results.get(0);
+                tasksAdapter.add(task);
+            }
+        }
     }
 }

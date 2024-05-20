@@ -10,24 +10,40 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/addTaskButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:text="+"
-            android:contentDescription="Adicionar Tarefa" />
-            />
+
 
         <ListView
             android:id="@+id/taskListView"
             android:layout_width="match_parent"
             android:layout_height="116dp"
-            android:layout_above="@+id/addTaskButton"
+            android:layout_above="@+id/buttonContainer"
             android:layout_marginBottom="-2dp"
             android:contentDescription="Lista de Tarefas"
             />
 
+        <LinearLayout
+            android:id="@+id/buttonContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal">
+
+            <Button
+                android:id="@+id/addTaskButton"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:text="+"
+                android:contentDescription="Adicionar Tarefa" />
+
+            <Button
+                android:id="@+id/voiceButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Add por Voz"
+                android:contentDescription="Adicionar Tarefa por Voz" />
+
+        </LinearLayout>
     </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
