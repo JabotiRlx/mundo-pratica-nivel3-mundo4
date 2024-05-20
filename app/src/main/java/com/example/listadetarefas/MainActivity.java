@@ -2,15 +2,20 @@ package com.example.listadetarefas;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.media.AudioDeviceCallback;
+import android.media.AudioManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
-
+import android.media.AudioDeviceInfo;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -31,10 +36,54 @@ public class MainActivity extends AppCompatActivity {
     private Button addTaskButton;
     private ArrayAdapter<String> tasksAdapter;
 
+    private AudioHelper audioHelper;
+
+    private boolean isSpeakerAvailable;
+    private boolean isBluetoothHeadsetConnected;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        audioHelper = new AudioHelper(this);
+
+        AudioManager audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+
+        isSpeakerAvailable = audioHelper.audioOutputAvailable(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER);
+
+        isBluetoothHeadsetConnected = audioHelper.audioOutputAvailable(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP);
+        audioManager.registerAudioDeviceCallback(new AudioDeviceCallback() {
+            @Override
+            public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+                super.onAudioDevicesAdded(addedDevices);
+                for (AudioDeviceInfo device : addedDevices) {
+                    if (device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP) {
+                        // Um fone de ouvido Bluetooth acabou de ser conectado
+                        Toast.makeText(MainActivity.this, "Fone de ouvido Bluetooth conectado", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
+                super.onAudioDevicesRemoved(removedDevices);
+                for (AudioDeviceInfo device : removedDevices) {
+                    if (device.getType() == AudioDeviceInfo.TYPE_BLUETOOTH_A2DP) {
+                        // Um fone de ouvido Bluetooth não está mais conectado
+                        Toast.makeText(MainActivity.this, "Fone de ouvido Bluetooth desconectado", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }, null);
+
+        Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.putExtra("EXTRA_CONNECTION_ONLY", true);
+        intent.putExtra("EXTRA_CLOSE_ON_CONNECT", true);
+        intent.putExtra("android.bluetooth.devicepicker.extra.FILTER_TYPE", 1);
+        startActivity(intent);
+
 
         tasksAdapter = new ArrayAdapter<>(  this,android.R.layout.simple_list_item_1);
         ListView tasksListView = findViewById(R.id.taskListView);
@@ -82,4 +131,6 @@ public class MainActivity extends AppCompatActivity {
 
         });
     }
+
+
 }
